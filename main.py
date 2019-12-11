@@ -37,9 +37,11 @@ def getMaxId(table, conn):
 
 def createClientSQL(conn, nomClient, prenomClient, dateClient, rueClient, villeClient, cpClient, telClient, mailClient):
     maxId = getMaxId("client", conn)
+    newId = maxId + 1
     cur = conn.cursor()
-    cur.execute("INSERT INTO camping.client VALUES(" + str(maxId+1) + ", '" + nomClient + "', '" + prenomClient + "', '" + dateClient + "', '" + rueClient + "', '" + villeClient + "', '" + cpClient + "', '" + telClient + "', '" + mailClient + "')")
-
+    cur.execute('INSERT INTO camping.client VALUES(%d, %s, %s, %s, %s, %s, %s, %s, %s)', (newId, nomClient, prenomClient, dateClient, rueClient, villeClient, cpClient, telClient, mailClient))
+    conn.commit()
+    cur.close()
 
 def display(screen):
     if screen == "startScreen":
