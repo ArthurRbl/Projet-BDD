@@ -42,6 +42,7 @@ def createClientSQL(conn, nomClient, prenomClient, dateClient, rueClient, villeC
     cur.execute('INSERT INTO camping.client VALUES(%d, %s, %s, %s, %s, %s, %s, %s, %s)', (newId, nomClient, prenomClient, dateClient, rueClient, villeClient, cpClient, telClient, mailClient))
     conn.commit()
     cur.close()
+    print("Client ajouté avec l'UID :", newId)
 
 def display(screen):
     if screen == "startScreen":
