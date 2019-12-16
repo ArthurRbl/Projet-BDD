@@ -25,7 +25,13 @@ def doQuery(conn):
     line2 = result[1]
     print(line1, line2)
 
-def getMaxId(table, conn):
+def getUidName(conn, UID):
+    cur = conn.cursor()
+    cur.execute("SELECT prenomclient, nomclient, datenaissance FROM camping.client WHERE idclient == %s", (UID))
+    result = cur.fetchall()
+    return result
+
+def getMaxId(conn, table):
     cur = conn.cursor()
     if table == "client":
         cur.execute("SELECT idclient FROM camping.client ORDER BY idclient")
@@ -35,14 +41,25 @@ def getMaxId(table, conn):
     result = cur.fetchall()
     return result[-1][0]
 
+def createResaSQL(conn, numEmplacement, numResp, dateResa, typeResa, tempResa, nbrVel, nbrVoit):
+    maxId = getMaxId(conn, "reservation")
+    newId = maxId + 1
+    cur = conn.cursor()
+    cur.execute('INSERT INTO camping.reservation VALUES(%d, %s, %s, %s, %s, %s, %s, %s)', (newId, numEmplacement, numResp, dateResa, typeResa, tempResa, nbrVel, nbrVoit))
+    conn.commit()
+    cur.close()
+    print("Réservation ajouté avec l'UID :", newId)
+    return
+
 def createClientSQL(conn, nomClient, prenomClient, dateClient, rueClient, villeClient, cpClient, telClient, mailClient):
-    maxId = getMaxId("client", conn)
+    maxId = getMaxId(conn, "client")
     newId = maxId + 1
     cur = conn.cursor()
     cur.execute('INSERT INTO camping.client VALUES(%d, %s, %s, %s, %s, %s, %s, %s, %s)', (newId, nomClient, prenomClient, dateClient, rueClient, villeClient, cpClient, telClient, mailClient))
     conn.commit()
     cur.close()
     print("Client ajouté avec l'UID :", newId)
+    return
 
 def display(screen):
     if screen == "startScreen":
@@ -82,7 +99,7 @@ def display(screen):
         print("|                                                      |")
         print("|  1. Emplacement            2. Responsable            |")
         print("|  3. Date arrivée           4. Type (jour/sem/mois)   |")
-        print("|  5. Durée séjour           6. Modifier info client   |")
+        print("|  5. Durée séjour           6. --------------------   |")
         print("|  7. Nombre voiture(s)      8. Nombre vélo(s)         |")
         print("|                                                      |")
         print("x======================================================x")
@@ -123,6 +140,68 @@ def actionHandler(action, menu):
         menu = "addClientMenu"
         createClientMenu()
         return "mainMenu"
+
+def createResaMenu():
+    run = True
+    arg1 = False
+    arg2 = False
+    arg3 = False
+    arg4 = False
+    arg5 = False
+    arg7 = False
+    arg8 = False
+    while run:
+        action = str(input("\nSaisir l'action à effectuer : "))
+        if action == "q" or action == "Q":
+            run = False
+        elif action == "1":
+            numEmplacement = str(input("Entrez le numéro d'emplacement à assigner à la réservation : "))
+            arg1 = True
+        elif action == "2":
+            action = n
+            while action == n or action == N and action != y and action != Y and action != q and action != Q:
+                numResp = str(input("Entrez l'UID du Client responsable de la réservation : "))
+                online, myConnection = dbConnect()
+                action = str(input("\nLe client responsable est-il bien ", getUidName(myConnection, numResp), "? (Y/N) : "))
+                dbClose(myConnection)
+            if action == y or action == Y:
+                arg2 = True
+        elif action == "3":
+            dateResa = str(input("Entrez la date de début de la réservation (sous la forme AAAA-MM-JJ) : "))
+            arg3 = True
+        elif action == "4":
+            typeResa = str(input("Entrez le type de la réservation (jour/sem/mois) : "))
+            arg4 = True
+        elif action == "5":
+            tempResa = str(input("Entrez la durée du séjour : "))
+            arg5 = True
+        elif action == "7":
+            nbrVel = str(input("Entrez le nombre de vélo(s) : "))
+            arg7 = True
+        elif action == "8":
+            nbrVoit = str(input("Entrez le nombre de voiture(s) : "))
+            arg8 = True
+        elif action == "y" or action == "Y":
+            if not arg1:
+                print("Il manque le numéro d'emplacement")
+            elif not arg2:
+                print("Il manque l'UID du Client responsable de la réservation")
+            elif not arg3:
+                print("Il manque la date de début de la réservation")
+            elif not arg4:
+                print("Il manque le type de la réservation")
+            elif not arg5:
+                print("Il manque la durée du séjour")
+            elif not arg7:
+                print("Il manque le nombre de vélo(s)")
+            elif not arg8:
+                print("Il manque le nombre de voiture(s)")
+            else:
+                online, myConnection = dbConnect()
+                createResaSQL(myConnection, numEmplacement, numResp, dateResa, typeResa, tempResa, nbrVel, nbrVoit)
+                dbClose(myConnection)
+                run = False
+    return
 
 def createClientMenu():
     run = True
