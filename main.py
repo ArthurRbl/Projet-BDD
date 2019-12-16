@@ -112,16 +112,17 @@ def display(screen):
 
 def actionHandler(action, menu):
     if action == "q" or action == "Q" and menu == "mainMenu":
-        return "leave", "mainMenu"
+        return "leave"
     elif action == "1" and menu == "mainMenu":
         display("addResaMenu")
         menu = "addResaMenu"
         createResaMenu()
+        return "mainMenu"
     elif action == "3" and menu == "mainMenu":
         display("addClientMenu")
         menu = "addClientMenu"
         createClientMenu()
-        return "mainMenu", "mainMenu"
+        return "mainMenu"
 
 def createClientMenu():
     run = True
@@ -202,8 +203,8 @@ display("mainMenu")
 
 while run:
     actionListener = str(input("\nSaisir l'action à effectuer : "))
-    answer, menu = actionHandler(actionListener, menu)
+    menu = actionHandler(actionListener, menu)
     display(answer)
-    if answer == "leave":
+    if menu == "leave":
         run = False
         dbClose(myConnection)
