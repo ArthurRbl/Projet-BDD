@@ -31,6 +31,12 @@ def getUidName(conn, UID):
     result = cur.fetchall()
     return result
 
+def getRespUid(conn, resaUID):
+    cur = conn.cursor()
+    cur.execute("SELECT numResp FROM camping.reservation WHERE idresa = %s", (resaUID))
+    result = cur.fetchall()
+    return result[-1][0]
+
 def getMaxId(conn, table):
     cur = conn.cursor()
     if table == "client":
@@ -51,6 +57,13 @@ def createResaSQL(conn, numEmplacement, numResp, dateResa, typeResa, tempResa, n
     print("Réservation ajouté avec l'UID :", newId)
     return
 
+def delResaSQL(conn, idResa):
+    cur = conn.cursor()
+    cur.execute('DELETE FROM camping.reservation WHERE idResa = %s', (idResa))
+    conn.commit()
+    cur.close()
+    return
+
 def createClientSQL(conn, nomClient, prenomClient, dateClient, rueClient, villeClient, cpClient, telClient, mailClient):
     maxId = getMaxId(conn, "client")
     newId = maxId + 1
@@ -59,6 +72,13 @@ def createClientSQL(conn, nomClient, prenomClient, dateClient, rueClient, villeC
     conn.commit()
     cur.close()
     print("Client ajouté avec l'UID :", newId)
+    return
+
+def delClientSQL(conn, UID):
+    cur = conn.cursor()
+    cur.execute('DELETE FROM camping.client WHERE idClient = %s', (UID))
+    conn.commit()
+    cur.close()
     return
 
 def display(screen):
@@ -83,7 +103,7 @@ def display(screen):
         print("|                 Selectionnez une action              |")
         print("|                                                      |")
         print("|  1. Créer réservation      2. Supprimer réservation  |")
-        print("|  3. Ajouter client         4. Supprimer client       |")
+        print("|  3. Créer client           4. Supprimer client       |")
         print("|  5. Modifier réservation   6. Modifier info client   |")
         print("|  7. Lister réservation     8. Lister clients         |")
         print("|                                                      |")
@@ -105,11 +125,11 @@ def display(screen):
         print("x======================================================x")
         print("\nSelectionnez le champs à renseigner")
         print("\nVous devez renseigner tout les champs marqués d'un (*)")
-        print("\nEntrez Y pour créer la reservation ou Q pour abandonner")
+        print("\nEntrez Y pour créer la réservation ou Q pour abandonner")
     elif screen == "addClientMenu":
         print("x======================================================x")
         print("|                                                      |")
-        print("|                     Ajout de Client                  |")
+        print("|                   Création de Client                 |")
         print("|                                                      |")
         print("+======================================================+")
         print("|                                                      |")
@@ -135,10 +155,16 @@ def actionHandler(action, menu):
         menu = "addResaMenu"
         createResaMenu()
         return "mainMenu"
+    elif action == "2" and menu == "mainMenu":
+        delResaMenu()
+        return "mainMenu"
     elif action == "3" and menu == "mainMenu":
         display("addClientMenu")
         menu = "addClientMenu"
         createClientMenu()
+        return "mainMenu"
+    elif action == "4" and menu == "mainMenu":
+        delClientMenu()
         return "mainMenu"
 
 def createResaMenu():
@@ -203,6 +229,18 @@ def createResaMenu():
                 run = False
     return
 
+def delResaMenu():
+    action = n
+    online, myConnection = dbConnect()
+    while action == n or action == N and action != y and action != Y and action != q and action != Q:
+        resaUID = str(input("Entrez l'UID de la réservation à supprimer: "))
+        respUID = getRespUid(resaUID)
+        action = str(input("\nVoulez-vous supprimer la réservation", resaUID, " dont le client responsable est ", getUidName(myConnection, respUID), "? (Y/N) : "))
+    if action == y or action == Y:
+        delResaSQL(myConnection, resaUID)
+    dbClose(myConnection)
+    return
+
 def createClientMenu():
     run = True
     arg1 = False
@@ -263,6 +301,17 @@ def createClientMenu():
                 createClientSQL(myConnection, nomClient, prenomClient, dateClient, rueClient, villeClient, cpClient, telClient, mailClient)
                 dbClose(myConnection)
                 run = False
+    return
+
+def delClientMenu():
+    action = n
+    online, myConnection = dbConnect()
+    while action == n or action == N and action != y and action != Y and action != q and action != Q:
+        UID = str(input("Entrez l'UID du client à supprimer: "))
+        action = str(input("\nLe client", UID, "est-il bien", getUidName(myConnection, UID), "? (Y/N) : "))
+    if action == y or action == Y:
+        delClientSQL(myConnection, UID)
+    dbClose(myConnection)
     return
 
 display("startScreen")
